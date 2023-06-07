@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">PTS_Sabdanabi</string>
+    <string name="error_field_required">All fields is required and cannot be empty</string>
+    <string name="error_minimal_password">Password must be at least 8 characters</string>
+    <string name="error_valid_email">Please enter a valid email address</string>
+    <string name="error_valid_password">Please enter a valid password</string>
+    <string name="error_password_dont_match">Password and confirmation password do not match</string>
 </resources>

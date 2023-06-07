@@ -1,76 +1,134 @@
 package com.example.pts_sabdanabi;
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.ArrayList;
+import android.app.ProgressDialog;
+import android.content.Intent;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Toast;
+
+import com.example.pts_sabdanabi.databinding.ActivityLoginnBinding;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.util.prefs.Preferences;
+import java.util.zip.Inflater;
+
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class LoginActivity extends AppCompatActivity {
 
-    public static final String EXTRA_EMAIL = "EXTRA_EMAIL";
-    public static final String EXTRA_Password = "EXTRA_Password";
-    private static final String STATE_RESULT = "state_result";
+    private ActivityLoginnBinding binding;
 
-    EditText emailLogin;
-    EditText passwordLogin;
-    Button Login;
-    TextView create;
-
+    private String username, password;
+    private ProgressDialog progressDialog;
+    Preferencse preferences;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
-        emailLogin = findViewById(R.id.emailLogin);
-        passwordLogin = findViewById(R.id.passwordLogin);
-        Login = findViewById(R.id.LoginButton);
-        create = findViewById(R.id.create);
+        binding = ActivityLoginnBinding.inflate(getLayoutInflater());
+        View view = binding.getRoot();
+        setContentView(view);
 
-
-        DataHolder dataHolder = DataHolder.getInstance();
-        ArrayList<String> dataListEmail = dataHolder.getDataListEmail();
-        ArrayList<String> dataListPasswod = dataHolder.getDataListPassword();
-
-
-        create.setOnClickListener(view -> {
-            Intent intent = new Intent(LoginActivity.this, Register.class);
+        preferences = new Preferencse(this);
+        if(preferences. getSessionLogin() == true){
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
+        }
+
+        binding.btnSignup.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(LoginActivity.this, DetailActivity.class);
+                startActivity(intent);
+            }
         });
 
-        Login.setOnClickListener(view -> {
 
+        binding.LoginButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                username = binding.emailLogin.getText().toString();
+                password = binding.passwordLogin.getText().toString();
 
-            boolean ada = false;
-            if (emailLogin.getText().toString().equals("") && passwordLogin.getText().toString().equals("")){
-                Toast.makeText(this, "Email dan Password Kosong", Toast.LENGTH_SHORT).show();
-            } else if (passwordLogin.getText().toString().equals("")){
-                Toast.makeText(this, "Password Kosong", Toast.LENGTH_SHORT).show();
-            }else if (emailLogin.getText().toString().equals("")){
-                Toast.makeText(this, "Email Kosong", Toast.LENGTH_SHORT).show();
-            }else {
-                for(int i =0 ; i < dataListEmail.size();i++){
-                    if(emailLogin.getText().toString().equals(dataListEmail.get(i)) && passwordLogin.getText().toString().equals(dataListPasswod.get(i))) {
-                        ada = true;
+                if(formIsEmpty()){
+                    Toast.makeText(LoginActivity.this, getString(R.string.error_field_required), Toast.LENGTH_SHORT).show();
+                }else{
+                    //Login Process
+                    //loginProcess();
+
+                    if(username.equals("admin") && password.equals("admin")){
+                        Toast.makeText(LoginActivity.this, "Login sukses", Toast.LENGTH_SHORT).show();
+                        preferences.setSessionLogin(true);
+
+                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                        startActivity(intent);
+                    }else{
+                        Toast.makeText(LoginActivity.this, "Login gagal", Toast.LENGTH_SHORT).show();
                     }
+                }
+            }
+        });
+    }
 
+    private boolean formIsEmpty(){
+        return username.isEmpty() || password.isEmpty();
+    }
+
+    private void loginProcess(){
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setCancelable(false);
+        progressDialog.setMessage("Loading....");
+        progressDialog.show();
+
+        ApiService service = ApiClient.getRetrofitInstance().create(ApiService.class);
+        Call<ResponseBody> call = service.login(username,password);
+
+        call.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                progressDialog.dismiss();
+                String res;
+                try {
+                    res = response.body().string();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
 
-                if(ada){
-                    Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                    startActivity(intent);
-                }else {
-                    Toast.makeText(this, "Email atau Password Salah", Toast.LENGTH_SHORT).show();
+                if(res != null){
+                    try {
+                        JSONObject jsonResponses = new JSONObject(res);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                progressDialog.dismiss();
+                toastMessage("Something went wrong...Please try later!");
             }
         });
 
     }
 
+    private void goToHomeActivity(){
+        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+        startActivity(intent);
+    }
 
+    private void toastMessage(String value){
+        Toast.makeText(this, value, Toast.LENGTH_SHORT).show();
+    }
 
 }
+
+
