@@ -46,7 +46,7 @@ public class LoginActivity extends AppCompatActivity {
         binding.btnSignup.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(LoginActivity.this, DetailActivity.class);
+                Intent intent = new Intent(LoginActivity.this, SignUpActivity.class);
                 startActivity(intent);
             }
         });
@@ -62,17 +62,9 @@ public class LoginActivity extends AppCompatActivity {
                     Toast.makeText(LoginActivity.this, getString(R.string.error_field_required), Toast.LENGTH_SHORT).show();
                 }else{
                     //Login Process
-                    //loginProcess();
+                    loginProcess();
 
-                    if(username.equals("admin") && password.equals("admin")){
-                        Toast.makeText(LoginActivity.this, "Login sukses", Toast.LENGTH_SHORT).show();
-                        preferences.setSessionLogin(true);
 
-                        Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-                        startActivity(intent);
-                    }else{
-                        Toast.makeText(LoginActivity.this, "Login gagal", Toast.LENGTH_SHORT).show();
-                    }
                 }
             }
         });
